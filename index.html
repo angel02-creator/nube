@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tablas de multiplicar 1-9</title>
+  <style>
+    :root{ --bg:#f5f7fb; --card:#ffffff; --accent:#0b74de; --muted:#6b7280; }
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial; background:var(--bg); margin:0; padding:24px; color:#111827}
+    h1{margin:0 0 18px 0; font-size:20px}
+    .controls{display:flex; gap:8px; align-items:center; margin-bottom:16px}
+    select, button{padding:8px 10px; border-radius:8px; border:1px solid #d1d5db; background:#fff}
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px}
+    .card{background:var(--card); border:3px solid #e6edf8; border-radius:12px; padding:12px; box-shadow:0 6px 14px rgba(12,37,71,0.06); transition:transform .12s, box-shadow .12s, border-color .12s}
+    .card:hover{transform:translateY(-4px); box-shadow:0 14px 30px rgba(12,37,71,0.09); border-color:#cfe3ff}
+    .card-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
+    .label{font-weight:700; font-size:16px}
+    .badge{font-size:12px; color:var(--muted)}
+    table{width:100%; border-collapse:collapse}
+    td{padding:4px 0; font-size:14px}
+    .frame{padding:8px; border:2px dashed #e2e8f0; border-radius:8px}
+    .highlight{border-color:var(--accent) !important; box-shadow:0 8px 30px rgba(11,116,222,0.12);}
+    .row-highlight{background:linear-gradient(90deg, rgba(11,116,222,0.06), transparent)}
+    .controls small{color:var(--muted)}
+    footer{margin-top:18px; font-size:13px; color:var(--muted)}
+  </style>
+</head>
+<body>
+  <h1>Tablas de multiplicar (1 al 9)</h1>
+  <div class="controls">
+    <label for="selector">Señalar tabla:</label>
+    <select id="selector" aria-label="Selecciona la tabla">
+      <option value="">— Elige —</option>
+    </select>
+    <button id="btnReset">Restablecer</button>
+    <small style="margin-left:8px">Haz clic en una tarjeta para resaltarla también.</small>
+  </div>
+
+  <div class="grid" id="grid">
+    <!-- Las tarjetas se generan con JS -->
+  </div>
+
+  <footer>Generado: tablas del 1 al 9 — cada tarjeta tiene marco y está señalada con su número.</footer>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const selector = document.getElementById('selector');
+    const btnReset = document.getElementById('btnReset');
+
+    // Crear opciones del selector y tarjetas
+    for (let n = 1; n <= 9; n++) {
+      // añadir opción
+      const opt = document.createElement('option');
+      opt.value = String(n);
+      opt.textContent = 'Tabla del ' + n;
+      selector.appendChild(opt);
+
+      // crear tarjeta
+      const card = document.createElement('div');
+      card.className = 'card frame';
+      card.dataset.tabla = String(n);
+
+      const header = document.createElement('div');
+      header.className = 'card-header';
+      const label = document.createElement('div');
+      label.className = 'label';
+      label.textContent = 'Tabla del ' + n;
+      const badge = document.createElement('div');
+      badge.className = 'badge';
+      badge.textContent = '× del ' + n;
+      header.appendChild(label);
+      header.appendChild(badge);
+
+      const tbl = document.createElement('table');
+      const tbody = document.createElement('tbody');
+      for (let i = 1; i <= 10; i++) {
+        const tr = document.createElement('tr');
+        const td1 = document.createElement('td');
+        td1.textContent = `${n} × ${i}`;
+        const td2 = document.createElement('td');
+        td2.textContent = `${n * i}`;
+        td2.style.textAlign = 'right';
+        tr.appendChild(td1);
+        tr.appendChild(td2);
+        tbody.appendChild(tr);
+      }
+      tbl.appendChild(tbody);
+
+      card.appendChild(header);
+      card.appendChild(tbl);
+      grid.appendChild(card);
+
+      // evento click para resaltar
+      card.addEventListener('click', () => highlightCard(card));
+    }
+
+    function clearHighlights(){
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('highlight'));
+      // quitar fila marcada si hay
+      document.querySelectorAll('tr').forEach(r => r.classList.remove('row-highlight'));
+    }
+
+    function highlightCard(card){
+      clearHighlights();
+      card.classList.add('highlight');
+      // marcar filas de la tabla con color débil
+      const rows = card.querySelectorAll('tr');
+      rows.forEach((r, idx) => { if (idx % 2 === 0) r.classList.add('row-highlight'); });
+      // sincronizar selector
+      selector.value = card.dataset.tabla;
+    }
+
+    selector.addEventListener('change', () => {
+      const val = selector.value;
+      if (!val) { clearHighlights(); return; }
+      const card = document.querySelector(`.card[data-tabla='${val}']`);
+      if (card) highlightCard(card);
+    });
+
+    btnReset.addEventListener('click', () => { selector.value = ''; clearHighlights(); });
+
+    // permitir foco con teclado: Enter para resaltar tarjeta activa
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && document.activeElement && document.activeElement.classList.contains('card')) {
+        highlightCard(document.activeElement);
+      }
+    });
+
+    // hacer tarjetas navegables por teclado
+    document.querySelectorAll('.card').forEach(c => c.setAttribute('tabindex', '0'));
+  </script>
+</body>
+</html>
